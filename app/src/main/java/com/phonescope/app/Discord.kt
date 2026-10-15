@@ -96,6 +96,32 @@ object Alerts {
     )
     private val merchantColors = mapOf("mari" to 0xFFF4A3, "jester" to 0xA352FF)
 
+    // Icons from the Sol's RNG wiki (sols-rng.fandom.com), shown as the embed thumbnail.
+    private const val WIKI = "https://static.wikia.nocookie.net/sol-rng/images"
+    private val biomeIcons = mapOf(
+        "NORMAL" to "$WIKI/0/07/DISCORICH-NORMAL.png",
+        "WINDY" to "$WIKI/9/98/DISCORICH-WINDY.png",
+        "RAINY" to "$WIKI/7/77/DISCORICH-RAINY.png",
+        "SNOWY" to "$WIKI/8/86/DISCORICH-SNOWY.png",
+        "SAND STORM" to "$WIKI/9/92/DISCORICH-SANDSTORM.png",
+        "HELL" to "$WIKI/b/b9/DISCORICH-HELL.png",
+        "STARFALL" to "$WIKI/1/11/DISCORICH-STARFALL.png",
+        "CORRUPTION" to "$WIKI/5/5f/DISCORICH-CORRUPTION.png",
+        "GLITCHED" to "$WIKI/d/dc/DISCORICH-BROKEN.png",
+        "HEAVEN" to "$WIKI/f/f9/Heaven.png",
+        "NULL" to "$WIKI/b/bb/Null_Biome_%28BloxTrap%29.png",
+        "DREAMSPACE" to "$WIKI/7/7a/DreamspaceRichPresenceFIX.png",
+        "CYBERSPACE" to "$WIKI/e/e9/CyberspaceNew.png/revision/latest/scale-to-width-down/512",
+    )
+    private val merchantIcons = mapOf(
+        "mari" to "$WIKI/e/e2/MariRender.png/revision/latest/scale-to-width-down/512",
+        "jester" to "$WIKI/5/5e/JesterRender.png/revision/latest/scale-to-width-down/512",
+    )
+
+    private fun JSONObject.thumbnail(url: String?) = apply {
+        if (url != null) put("thumbnail", JSONObject().put("url", url))
+    }
+
     private fun stamp(): Pair<Long, String> {
         val now = System.currentTimeMillis() / 1000
         return now to "<t:$now:T> (<t:$now:R>)"
@@ -115,6 +141,7 @@ object Alerts {
             put("title", "Biome Started - $biome")
             put("description", "**$time**")
             put("color", biomeColors[biome] ?: 0x5865F2)
+            thumbnail(biomeIcons[biome])
             put("timestamp", Instant.now().toString())
             if (p.privateServer.isNotBlank()) {
                 put("fields", JSONArray().put(JSONObject().put("name", "Private Server").put("value", p.privateServer)))
@@ -132,6 +159,7 @@ object Alerts {
             put("title", "Biome Ended - $biome")
             put("description", "**$time**")
             put("color", biomeColors[biome] ?: 0x5865F2)
+            thumbnail(biomeIcons[biome])
             put("footer", footer())
         }
         Discord.send(p.biomeWebhook, payload("Biome Alert", "", embed))
@@ -148,6 +176,7 @@ object Alerts {
         val embed = JSONObject().apply {
             put("title", "MERCHANT SPOTTED - $name Found")
             put("color", merchantColors[name.lowercase()] ?: 0xF1C40F)
+            thumbnail(merchantIcons[name.lowercase()])
             put("fields", fields)
             put("timestamp", Instant.now().toString())
             if (shot != null) put("image", JSONObject().put("url", "attachment://screenshot.jpg"))
