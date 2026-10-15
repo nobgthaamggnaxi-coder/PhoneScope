@@ -147,9 +147,7 @@ class MainActivity : AppCompatActivity() {
                 .setTitle("Shizuku isn't running")
                 .setMessage(
                     "Install the Shizuku app (Play Store or GitHub), open it and tap Start " +
-                        "(\"Start via Wireless debugging\" works without a PC). Then tap Start here again.
-
-" +
+                        "(\"Start via Wireless debugging\" works without a PC). Then tap Start here again.\n\n" +
                         "Or turn off \"Use Shizuku\" to use screen recording instead."
                 )
                 .setPositiveButton("OK", null)
