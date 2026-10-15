@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Simple compass-star icon -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,22 L60,48 L86,54 L60,60 L54,86 L48,60 L22,54 L48,48 Z" />
+    <path
+        android:fillColor="#5865F2"
+        android:pathData="M54,44 L64,54 L54,64 L44,54 Z" />
+</vector>
