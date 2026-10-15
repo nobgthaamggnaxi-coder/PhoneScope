@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "SolScopeMobile"
+rootProject.name = "PhoneScope"
 include(":app")

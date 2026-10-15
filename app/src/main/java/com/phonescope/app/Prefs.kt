@@ -1,11 +1,11 @@
-package com.solscope.mobile
+package com.phonescope.app
 
 import android.content.Context
 import android.graphics.RectF
 
 /** All user settings, stored in SharedPreferences. */
 class Prefs(context: Context) {
-    private val sp = context.getSharedPreferences("solscope", Context.MODE_PRIVATE)
+    private val sp = context.getSharedPreferences("phonescope", Context.MODE_PRIVATE)
 
     private fun str(key: String, def: String) = sp.getString(key, def) ?: def
     private fun put(key: String, value: String) = sp.edit().putString(key, value).apply()

@@ -1,4 +1,4 @@
-package com.solscope.mobile
+package com.phonescope.app
 
 /**
  * Turns OCR text into biome / merchant events.

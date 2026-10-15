@@ -1,4 +1,4 @@
-package com.solscope.mobile
+package com.phonescope.app
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -153,7 +153,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         col.addView(TextView(this).apply {
-            text = "SolScope Mobile"
+            text = "PhoneScope"
             textSize = 26f
             setTypeface(typeface, Typeface.BOLD)
         })

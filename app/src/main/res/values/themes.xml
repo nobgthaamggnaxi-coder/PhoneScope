@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.SolScope" parent="Theme.Material3.DayNight">
+    <style name="Theme.PhoneScope" parent="Theme.Material3.DayNight">
         <item name="colorPrimary">#5865F2</item>
         <item name="colorSecondary">#9B59B6</item>
     </style>

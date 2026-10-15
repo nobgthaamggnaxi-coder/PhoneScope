@@ -1,4 +1,4 @@
-package com.solscope.mobile
+package com.phonescope.app
 
 import android.os.Handler
 import android.os.Looper
@@ -13,7 +13,7 @@ import java.util.concurrent.Executors
 
 /** Sends Discord webhook messages one at a time (keeps order, respects rate limits). */
 object Discord {
-    private const val TAG = "SolScope"
+    private const val TAG = "PhoneScope"
     private val exec = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
 
@@ -57,12 +57,12 @@ object Discord {
         conn.doOutput = true
         conn.connectTimeout = 15_000
         conn.readTimeout = 15_000
-        conn.setRequestProperty("User-Agent", "SolScopeMobile/1.0")
+        conn.setRequestProperty("User-Agent", "PhoneScope/1.0")
         if (image == null) {
             conn.setRequestProperty("Content-Type", "application/json")
             conn.outputStream.use { it.write(payload.toString().toByteArray()) }
         } else {
-            val boundary = "----SolScope${System.currentTimeMillis()}"
+            val boundary = "----PhoneScope${System.currentTimeMillis()}"
             conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=$boundary")
             DataOutputStream(conn.outputStream).use { out ->
                 out.writeBytes("--$boundary\r\n")
@@ -86,7 +86,7 @@ object Discord {
 
 /** Builds the embeds (styled like the PC macros). */
 object Alerts {
-    const val FOOTER = "SolScope Mobile | Release v1.0.0"
+    const val FOOTER = "PhoneScope | Release v1.0.0"
 
     private val biomeColors = mapOf(
         "NORMAL" to 0xFFFFFF, "WINDY" to 0x9AE5FF, "RAINY" to 0x027CBD, "SNOWY" to 0xDCEFFF,
@@ -159,12 +159,12 @@ object Alerts {
 
     fun test(p: Prefs, url: String, label: String, onResult: (Boolean, String) -> Unit) {
         val embed = JSONObject().apply {
-            put("title", "SolScope Mobile connected ✅")
+            put("title", "PhoneScope connected ✅")
             put("description", "This is the **$label** webhook. Alerts will appear here.")
             put("color", 0x57F287)
             put("footer", footer())
         }
-        Discord.send(url, payload("SolScope Mobile", p.mentionText(), embed), null, onResult)
+        Discord.send(url, payload("PhoneScope", p.mentionText(), embed), null, onResult)
     }
 
     fun status(p: Prefs, text: String) {

@@ -14,9 +14,9 @@
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="SolScope Mobile"
+        android:label="PhoneScope"
         android:supportsRtl="true"
-        android:theme="@style/Theme.SolScope">
+        android:theme="@style/Theme.PhoneScope">
 
         <activity
             android:name=".MainActivity"

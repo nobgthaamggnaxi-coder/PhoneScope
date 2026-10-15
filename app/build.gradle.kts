@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.solscope.mobile"
+    namespace = "com.phonescope.app"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.solscope.mobile"
+        applicationId = "com.phonescope.app"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

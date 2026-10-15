@@ -1,4 +1,4 @@
-package com.solscope.mobile
+package com.phonescope.app
 
 import android.app.Activity
 import android.app.Notification
@@ -46,10 +46,10 @@ import kotlin.math.roundToInt
 class MonitorService : Service() {
 
     companion object {
-        private const val TAG = "SolScope"
+        private const val TAG = "PhoneScope"
         const val EXTRA_CODE = "code"
         const val EXTRA_DATA = "data"
-        const val ACTION_STOP = "com.solscope.mobile.STOP"
+        const val ACTION_STOP = "com.phonescope.app.STOP"
         private const val CHANNEL = "monitor"
         private const val NOTIF_ID = 1
         private const val MAX_SIDE = 1600 // downscale big screens to keep OCR fast
@@ -84,7 +84,7 @@ class MonitorService : Service() {
     override fun onCreate() {
         super.onCreate()
         prefs = Prefs(this)
-        worker = HandlerThread("solscope-scan").also { it.start() }
+        worker = HandlerThread("phonescope-scan").also { it.start() }
         handler = Handler(worker.looper)
     }
 
@@ -125,7 +125,7 @@ class MonitorService : Service() {
 
         detector = Detector(prefs.biomeList(), prefs.merchantList())
         wakeLock = getSystemService(PowerManager::class.java)
-            .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SolScope::scan")
+            .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "PhoneScope::scan")
             .apply { acquire(12 * 60 * 60 * 1000L) }
 
         setupDisplay()
@@ -158,7 +158,7 @@ class MonitorService : Service() {
         val vd = display
         if (vd == null) {
             display = projection?.createVirtualDisplay(
-                "SolScope", w, h, dpi, DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                "PhoneScope", w, h, dpi, DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
                 newReader.surface, null, handler
             )
         } else {
@@ -269,7 +269,7 @@ class MonitorService : Service() {
         )
         return NotificationCompat.Builder(this, CHANNEL)
             .setSmallIcon(android.R.drawable.ic_menu_view)
-            .setContentTitle("SolScope is watching Sol's RNG")
+            .setContentTitle("PhoneScope is watching Sol's RNG")
             .setContentText(text)
             .setOngoing(true)
             .setContentIntent(open)

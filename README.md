@@ -1,4 +1,4 @@
-# SolScope Mobile
+# PhoneScope
 
 Android app that watches **Sol's RNG** on your phone and posts to Discord:
 
@@ -12,10 +12,8 @@ clicked or typed in the game – it only watches and notifies.
 
 ## 1. Get the APK
 
-**Option A – GitHub (no tools needed on your PC)**
-1. Create a new GitHub repository and upload everything in this folder (keep the `.github` folder).
-2. Open the **Actions** tab → **Build APK** → wait ~5 min.
-3. Open the finished run → download **SolScopeMobile-apk** → unzip → copy `app-debug.apk` to your phone.
+**Option A – Download (easiest)**
+Go to the [**Releases** page](../../releases/latest) and download `PhoneScope-v1.0.0.apk`.
 
 **Option B – Android Studio**
 Open this folder in Android Studio → *Build → Build App Bundle(s) / APK(s) → Build APK(s)*.
@@ -39,7 +37,7 @@ Install on the phone (allow "Install unknown apps" for your file manager / brows
    (default ping: GLITCHED, DREAMSPACE, CYBERSPACE).
 3. Tap **Start**, allow screen recording (**Entire screen**, or "A single app" → Roblox).
    Roblox opens automatically.
-4. Disable battery optimisation for SolScope (Settings → Apps → SolScope → Battery → Unrestricted).
+4. Disable battery optimisation for PhoneScope (Settings → Apps → PhoneScope → Battery → Unrestricted).
 
 ## Tuning the screen areas
 
