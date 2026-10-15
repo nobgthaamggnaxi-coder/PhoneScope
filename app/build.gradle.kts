@@ -33,6 +33,9 @@ dependencies {
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.12.0")
-    // On-device OCR (bundled model, works offline)
+    // Shizuku: run shell commands (read Roblox logs) without root
+    implementation("dev.rikka.shizuku:api:13.1.5")
+    implementation("dev.rikka.shizuku:provider:13.1.5")
+    // On-device OCR (screen mode fallback) (bundled model, works offline)
     implementation("com.google.mlkit:text-recognition:16.0.1")
 }

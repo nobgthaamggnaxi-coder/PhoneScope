@@ -34,7 +34,6 @@ import com.google.android.gms.tasks.Tasks
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
-import java.io.ByteArrayOutputStream
 import java.util.concurrent.TimeUnit
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -54,17 +53,8 @@ class MonitorService : Service() {
         private const val NOTIF_ID = 1
         private const val MAX_SIDE = 1600 // downscale big screens to keep OCR fast
 
-        @Volatile var running = false
-            private set
-        @Volatile var lastStatus = "Stopped"
-            private set
-        var statusListener: ((String) -> Unit)? = null
-        private val main = Handler(Looper.getMainLooper())
-
-        fun postStatus(s: String) {
-            lastStatus = s
-            main.post { statusListener?.invoke(s) }
-        }
+        val running get() = MacroStatus.screenRunning
+        fun postStatus(s: String) = MacroStatus.post(s)
     }
 
     private lateinit var prefs: Prefs
@@ -129,7 +119,7 @@ class MonitorService : Service() {
             .apply { acquire(12 * 60 * 60 * 1000L) }
 
         setupDisplay()
-        running = true
+        MacroStatus.screenRunning = true
         postStatus("Running – waiting for a biome…")
         Alerts.status(prefs, "Macro Started")
         handler.postDelayed(scanLoop, 1500)
@@ -207,11 +197,6 @@ class MonitorService : Service() {
         return result.textBlocks.flatMap { block -> block.lines.map { it.text } }
     }
 
-    private fun jpeg(bmp: Bitmap): ByteArray = ByteArrayOutputStream().use {
-        bmp.compress(Bitmap.CompressFormat.JPEG, 70, it)
-        it.toByteArray()
-    }
-
     // ---------- scan loop ----------
 
     private val scanLoop = object : Runnable {
@@ -235,14 +220,12 @@ class MonitorService : Service() {
         val biomeLines = ocr(crop(frame, biomeRegion))
         val chatLines = if (chatRegion == biomeRegion) biomeLines else ocr(crop(frame, chatRegion))
 
-        val shot by lazy { if (prefs.attachScreenshot) jpeg(frame) else null }
-
         detector.onBiomeText(biomeLines)?.let { change ->
             change.old?.let { if (prefs.notifies(it)) Alerts.biomeEnded(prefs, it) }
-            if (prefs.notifies(change.new)) Alerts.biomeStarted(prefs, change.new, shot)
+            if (prefs.notifies(change.new)) Alerts.biomeStarted(prefs, change.new)
         }
         for (m in detector.onChatText(chatLines)) {
-            Alerts.merchant(prefs, m.name, m.line, shot)
+            Alerts.merchant(prefs, m.name, m.line)
             postStatus("Merchant: ${m.name}!")
         }
 
@@ -283,7 +266,7 @@ class MonitorService : Service() {
 
     override fun onDestroy() {
         val wasRunning = running
-        running = false
+        MacroStatus.screenRunning = false
         handler.removeCallbacksAndMessages(null)
         handler.post {
             display?.release(); display = null
@@ -309,4 +292,5 @@ fun Context.startMonitor(resultCode: Int, data: Intent) {
 
 fun Context.stopMonitor() {
     stopService(Intent(this, MonitorService::class.java))
+    stopService(Intent(this, LogMonitorService::class.java))
 }

@@ -54,9 +54,10 @@ class Prefs(context: Context) {
         get() = sp.getBoolean("ping_merchants", true)
         set(v) = sp.edit().putBoolean("ping_merchants", v).apply()
 
-    var attachScreenshot: Boolean
-        get() = sp.getBoolean("attach_shot", true)
-        set(v) = sp.edit().putBoolean("attach_shot", v).apply()
+    /** true = read Roblox logs through Shizuku (no screen recording); false = screen reading fallback. */
+    var useShizuku: Boolean
+        get() = sp.getBoolean("use_shizuku", true)
+        set(v) = sp.edit().putBoolean("use_shizuku", v).apply()
 
     /** Screen area (percent: left,top,right,bottom) where the biome name is shown. */
     var biomeRegion: String
@@ -75,8 +76,12 @@ class Prefs(context: Context) {
     fun merchantWebhookOrDefault() = merchantWebhook.ifBlank { biomeWebhook }
 
     fun biomeList() = splitList(biomes).map { it.uppercase() }
-    fun notifies(biome: String) = splitList(notifyBiomes).any { it.equals(biome, true) }
-    fun pings(biome: String) = splitList(pingBiomes).any { it.equals(biome, true) }
+    fun notifies(biome: String) = splitList(notifyBiomes).any { same(it, biome) }
+    fun pings(biome: String) = splitList(pingBiomes).any { same(it, biome) }
+
+    /** "Sand Storm" == "SANDSTORM" */
+    private fun same(a: String, b: String) =
+        a.uppercase().filter(Char::isLetter) == b.uppercase().filter(Char::isLetter)
     fun merchantList() = splitList(merchants)
 
     /** Discord mention text, e.g. "<@123> <@&456>", or "" if nothing configured. */

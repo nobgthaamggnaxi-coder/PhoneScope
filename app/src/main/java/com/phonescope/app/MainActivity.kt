@@ -6,6 +6,8 @@ import android.graphics.Typeface
 import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.InputType
 import android.view.View
 import android.view.ViewGroup
@@ -14,6 +16,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
@@ -23,6 +26,7 @@ import com.google.android.material.card.MaterialCardView
 import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import rikka.shizuku.Shizuku
 
 class MainActivity : AppCompatActivity() {
 
@@ -42,7 +46,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var chatRegion: TextInputEditText
     private lateinit var interval: TextInputEditText
     private lateinit var pingMerchants: MaterialSwitch
-    private lateinit var attachShot: MaterialSwitch
+    private lateinit var useShizuku: MaterialSwitch
 
     private val captureLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { r ->
@@ -57,22 +61,35 @@ class MainActivity : AppCompatActivity() {
         }
 
     private val notifLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { requestCapture() }
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { launchMacro() }
+
+    private val shizukuResult = Shizuku.OnRequestPermissionResultListener { _, result ->
+        runOnUiThread {
+            if (result == PackageManager.PERMISSION_GRANTED) launchMacro()
+            else toast("Shizuku permission was denied")
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         prefs = Prefs(this)
         setContentView(buildUi())
+        Shizuku.addRequestPermissionResultListener(shizukuResult)
+    }
+
+    override fun onDestroy() {
+        Shizuku.removeRequestPermissionResultListener(shizukuResult)
+        super.onDestroy()
     }
 
     override fun onResume() {
         super.onResume()
-        MonitorService.statusListener = { statusText.text = it }
-        statusText.text = MonitorService.lastStatus
+        MacroStatus.listener = { statusText.text = it }
+        statusText.text = MacroStatus.last
     }
 
     override fun onPause() {
-        MonitorService.statusListener = null
+        MacroStatus.listener = null
         super.onPause()
     }
 
@@ -92,7 +109,7 @@ class MainActivity : AppCompatActivity() {
         prefs.chatRegion = chatRegion.value().ifBlank { "0,0,100,100" }
         prefs.scanIntervalSec = interval.value().toIntOrNull() ?: 2
         prefs.pingMerchants = pingMerchants.isChecked
-        prefs.attachScreenshot = attachShot.isChecked
+        prefs.useShizuku = useShizuku.isChecked
 
         if (!prefs.biomeWebhook.startsWith("https://discord.com/api/webhooks/") &&
             !prefs.biomeWebhook.startsWith("https://discordapp.com/api/webhooks/") &&
@@ -107,7 +124,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun startMacro() {
         if (!save()) return
-        if (MonitorService.running) {
+        if (MacroStatus.running) {
             toast("Already running")
             return
         }
@@ -116,8 +133,55 @@ class MainActivity : AppCompatActivity() {
         ) {
             notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         } else {
-            requestCapture()
+            launchMacro()
         }
+    }
+
+    private fun launchMacro() {
+        if (!prefs.useShizuku) {
+            requestCapture()
+            return
+        }
+        when {
+            !ShizukuShell.isRunning() -> AlertDialog.Builder(this)
+                .setTitle("Shizuku isn't running")
+                .setMessage(
+                    "Install the Shizuku app (Play Store or GitHub), open it and tap Start " +
+                        "(\"Start via Wireless debugging\" works without a PC). Then tap Start here again.
+
+" +
+                        "Or turn off \"Use Shizuku\" to use screen recording instead."
+                )
+                .setPositiveButton("OK", null)
+                .show()
+            Shizuku.isPreV11() -> toast("Your Shizuku is too old, please update it")
+            !ShizukuShell.hasPermission() -> Shizuku.requestPermission(1)
+            else -> {
+                startLogMonitor()
+                toast("Macro started – opening Roblox")
+                openRoblox()
+            }
+        }
+    }
+
+    private fun checkShizuku() {
+        if (ShizukuShell.isRunning() && !Shizuku.isPreV11() && !ShizukuShell.hasPermission()) {
+            Shizuku.requestPermission(2)
+            toast("Allow PhoneScope in the Shizuku popup, then check again")
+            return
+        }
+        toast("Checking…")
+        val ui = Handler(Looper.getMainLooper())
+        Thread {
+            val report = try { ShizukuShell.diagnose() } catch (e: Exception) { "❌ Error: ${e.message}" }
+            ui.post {
+                AlertDialog.Builder(this)
+                    .setTitle("Shizuku & logs check")
+                    .setMessage(report)
+                    .setPositiveButton("OK", null)
+                    .show()
+            }
+        }.start()
     }
 
     private fun requestCapture() {
@@ -164,7 +228,7 @@ class MainActivity : AppCompatActivity() {
 
         // Status card + main controls
         val statusCard = card(col)
-        statusText = TextView(this).apply { textSize = 15f; text = MonitorService.lastStatus }
+        statusText = TextView(this).apply { textSize = 15f; text = MacroStatus.last }
         statusCard.addView(label("Status"))
         statusCard.addView(statusText)
         val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(0, dp(12), 0, 0) }
@@ -206,14 +270,18 @@ class MainActivity : AppCompatActivity() {
         pingMerchants = switch(merchantCard, "Ping me for merchants", prefs.pingMerchants)
 
         // Scanner
+        val modeCard = card(col)
+        modeCard.addView(label("Detection"))
+        useShizuku = switch(modeCard, "Use Shizuku (reads Roblox logs, no screen recording)", prefs.useShizuku)
+        modeCard.addView(button("Check Shizuku & logs", outlined = true) { save(); checkShizuku() })
+
         val scanCard = card(col)
-        scanCard.addView(label("Screen reading"))
+        scanCard.addView(label("Screen mode only (when Shizuku is off)"))
         biomeRegion = input(scanCard, "Biome text area (left,top,right,bottom %)", prefs.biomeRegion,
             "0,0,100,100 = whole screen. Narrow it to where the biome name shows for fewer false alerts")
         chatRegion = input(scanCard, "Chat area (left,top,right,bottom %)", prefs.chatRegion,
             "Keep chat open in game. Example top-left chat: 0,0,45,45")
         interval = input(scanCard, "Scan every (seconds)", prefs.scanIntervalSec.toString(), "1–30", number = true)
-        attachShot = switch(scanCard, "Attach a screenshot to alerts", prefs.attachScreenshot)
 
         col.addView(button("Save settings", outlined = true) { if (save()) toast("Saved") },
             LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(12) })
@@ -221,10 +289,10 @@ class MainActivity : AppCompatActivity() {
         col.addView(TextView(this).apply {
             alpha = 0.7f
             setPadding(0, dp(16), 0, 0)
-            text = "How it works: tap Start, allow screen recording (choose \"Entire screen\" or Roblox), " +
-                "then play Sol's RNG. The app reads the biome name and the merchant chat message from your " +
-                "screen every few seconds with on-device OCR and posts to your Discord webhook. " +
-                "Keep the chat visible to catch Mari / Jester. Disable battery optimisation for this app so it keeps running."
+            text = "How it works: with Shizuku on, PhoneScope follows Roblox's log output (the same status " +
+                "messages PC macros read) – no screen recording and no screenshots. Start Shizuku, tap Start, " +
+                "and play Sol's RNG. Use \"Check Shizuku & logs\" to confirm your phone exposes the biome info. " +
+                "Disable battery optimisation for this app so it keeps running."
         })
         return scroll
     }

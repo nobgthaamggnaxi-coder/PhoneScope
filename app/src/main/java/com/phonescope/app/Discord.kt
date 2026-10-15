@@ -5,7 +5,6 @@ import android.os.Looper
 import android.util.Log
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.DataOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.time.Instant
@@ -20,7 +19,6 @@ object Discord {
     fun send(
         url: String,
         payload: JSONObject,
-        image: ByteArray? = null,
         onResult: ((ok: Boolean, msg: String) -> Unit)? = null,
     ) {
         if (!url.startsWith("https://")) {
@@ -31,7 +29,7 @@ object Discord {
             var result = false to "Unknown error"
             for (attempt in 0 until 3) {
                 result = try {
-                    val (code, body) = post(url, payload, image)
+                    val (code, body) = post(url, payload)
                     when {
                         code in 200..299 -> true to "Sent"
                         code == 429 -> {
@@ -51,31 +49,15 @@ object Discord {
         }
     }
 
-    private fun post(url: String, payload: JSONObject, image: ByteArray?): Pair<Int, String> {
+    private fun post(url: String, payload: JSONObject): Pair<Int, String> {
         val conn = URL(url).openConnection() as HttpURLConnection
         conn.requestMethod = "POST"
         conn.doOutput = true
         conn.connectTimeout = 15_000
         conn.readTimeout = 15_000
         conn.setRequestProperty("User-Agent", "PhoneScope/1.0")
-        if (image == null) {
-            conn.setRequestProperty("Content-Type", "application/json")
-            conn.outputStream.use { it.write(payload.toString().toByteArray()) }
-        } else {
-            val boundary = "----PhoneScope${System.currentTimeMillis()}"
-            conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=$boundary")
-            DataOutputStream(conn.outputStream).use { out ->
-                out.writeBytes("--$boundary\r\n")
-                out.writeBytes("Content-Disposition: form-data; name=\"payload_json\"\r\n")
-                out.writeBytes("Content-Type: application/json\r\n\r\n")
-                out.write(payload.toString().toByteArray())
-                out.writeBytes("\r\n--$boundary\r\n")
-                out.writeBytes("Content-Disposition: form-data; name=\"files[0]\"; filename=\"screenshot.jpg\"\r\n")
-                out.writeBytes("Content-Type: image/jpeg\r\n\r\n")
-                out.write(image)
-                out.writeBytes("\r\n--$boundary--\r\n")
-            }
-        }
+        conn.setRequestProperty("Content-Type", "application/json")
+        conn.outputStream.use { it.write(payload.toString().toByteArray()) }
         val code = conn.responseCode
         val body = (if (code >= 400) conn.errorStream else conn.inputStream)
             ?.bufferedReader()?.use { it.readText() } ?: ""
@@ -88,9 +70,11 @@ object Discord {
 object Alerts {
     const val FOOTER = "PhoneScope | Release v1.0.0"
 
+    private fun key(biome: String) = biome.uppercase().filter(Char::isLetter)
+
     private val biomeColors = mapOf(
         "NORMAL" to 0xFFFFFF, "WINDY" to 0x9AE5FF, "RAINY" to 0x027CBD, "SNOWY" to 0xDCEFFF,
-        "SAND STORM" to 0xF4C27C, "HELL" to 0x5C1219, "STARFALL" to 0x6784E0, "HEAVEN" to 0xFFF4B5,
+        "SANDSTORM" to 0xF4C27C, "HELL" to 0x5C1219, "STARFALL" to 0x6784E0, "HEAVEN" to 0xFFF4B5,
         "CORRUPTION" to 0x9042FF, "NULL" to 0x000000, "GLITCHED" to 0x65FF65,
         "DREAMSPACE" to 0xFF7DFF, "CYBERSPACE" to 0x00E5FF,
     )
@@ -103,7 +87,7 @@ object Alerts {
         "WINDY" to "$WIKI/9/98/DISCORICH-WINDY.png",
         "RAINY" to "$WIKI/7/77/DISCORICH-RAINY.png",
         "SNOWY" to "$WIKI/8/86/DISCORICH-SNOWY.png",
-        "SAND STORM" to "$WIKI/9/92/DISCORICH-SANDSTORM.png",
+        "SANDSTORM" to "$WIKI/9/92/DISCORICH-SANDSTORM.png",
         "HELL" to "$WIKI/b/b9/DISCORICH-HELL.png",
         "STARFALL" to "$WIKI/1/11/DISCORICH-STARFALL.png",
         "CORRUPTION" to "$WIKI/5/5f/DISCORICH-CORRUPTION.png",
@@ -135,22 +119,21 @@ object Alerts {
 
     private fun footer() = JSONObject().put("text", FOOTER)
 
-    fun biomeStarted(p: Prefs, biome: String, shot: ByteArray?) {
+    fun biomeStarted(p: Prefs, biome: String) {
         val (_, time) = stamp()
         val embed = JSONObject().apply {
             put("title", "Biome Started - $biome")
             put("description", "**$time**")
-            put("color", biomeColors[biome] ?: 0x5865F2)
-            thumbnail(biomeIcons[biome])
+            put("color", biomeColors[key(biome)] ?: 0x5865F2)
+            thumbnail(biomeIcons[key(biome)])
             put("timestamp", Instant.now().toString())
             if (p.privateServer.isNotBlank()) {
                 put("fields", JSONArray().put(JSONObject().put("name", "Private Server").put("value", p.privateServer)))
             }
-            if (shot != null) put("image", JSONObject().put("url", "attachment://screenshot.jpg"))
             put("footer", footer())
         }
         val content = if (p.pings(biome)) "${p.mentionText()} **$biome** has started!".trim() else ""
-        Discord.send(p.biomeWebhook, payload("Biome Alert", content, embed), shot)
+        Discord.send(p.biomeWebhook, payload("Biome Alert", content, embed))
     }
 
     fun biomeEnded(p: Prefs, biome: String) {
@@ -158,14 +141,14 @@ object Alerts {
         val embed = JSONObject().apply {
             put("title", "Biome Ended - $biome")
             put("description", "**$time**")
-            put("color", biomeColors[biome] ?: 0x5865F2)
-            thumbnail(biomeIcons[biome])
+            put("color", biomeColors[key(biome)] ?: 0x5865F2)
+            thumbnail(biomeIcons[key(biome)])
             put("footer", footer())
         }
         Discord.send(p.biomeWebhook, payload("Biome Alert", "", embed))
     }
 
-    fun merchant(p: Prefs, name: String, line: String, shot: ByteArray?) {
+    fun merchant(p: Prefs, name: String, line: String) {
         val (_, time) = stamp()
         val fields = JSONArray()
             .put(JSONObject().put("name", "Time").put("value", time))
@@ -179,11 +162,10 @@ object Alerts {
             thumbnail(merchantIcons[name.lowercase()])
             put("fields", fields)
             put("timestamp", Instant.now().toString())
-            if (shot != null) put("image", JSONObject().put("url", "attachment://screenshot.jpg"))
             put("footer", footer())
         }
         val content = if (p.pingMerchants) "${p.mentionText()} **$name** is here!".trim() else ""
-        Discord.send(p.merchantWebhookOrDefault(), payload("$name Alert", content, embed), shot)
+        Discord.send(p.merchantWebhookOrDefault(), payload("$name Alert", content, embed))
     }
 
     fun test(p: Prefs, url: String, label: String, onResult: (Boolean, String) -> Unit) {
@@ -193,7 +175,7 @@ object Alerts {
             put("color", 0x57F287)
             put("footer", footer())
         }
-        Discord.send(url, payload("PhoneScope", p.mentionText(), embed), null, onResult)
+        Discord.send(url, payload("PhoneScope", p.mentionText(), embed), onResult)
     }
 
     fun status(p: Prefs, text: String) {

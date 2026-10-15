@@ -8,14 +8,17 @@
 - **Biome alerts** – "Biome Started" / "Biome Ended" messages with your private server link
 - **Merchant alerts** – "MERCHANT SPOTTED – Mari / Jester Found" with a join link
 - **Pings** – @ you or a role for rare biomes (Glitched, Dreamspace, Cyberspace…) and merchants
-- **Screenshots** attached to alerts (optional)
+- **Biome icons & merchant pictures** on every alert
 - Separate webhooks for biomes and merchants, plus test buttons
-- On-device screen reading, no root needed, and it never taps or types in the game
+- **Shizuku mode**: reads Roblox's logs, so no screen recording and no screenshots (no root needed)
+- Screen-reading fallback for phones where logs aren't available
+- Never taps or types in the game
 
 ### ⚙️ Setup
 1. Discord: **Server Settings → Integrations → Webhooks → New Webhook → Copy URL**
 2. Paste it into PhoneScope and tap **Test biome**
-3. Tap **Start**, allow screen recording, and play Sol's RNG with the chat visible
+3. Start **Shizuku** (Wireless debugging), tap **Check Shizuku & logs** in PhoneScope
+4. Tap **Start** and play Sol's RNG
 
 See the [README](https://github.com/nobgthaamggnaxi-coder/PhoneScope#readme) for the full guide and screen-area tuning.
 
