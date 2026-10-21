@@ -7,9 +7,9 @@ Android app that watches **Sol's RNG** on your phone and posts to Discord:
 - Optional @ping of you or a role for rare biomes and merchants
 - Biome icons and merchant pictures on every alert
 
-**Shizuku mode (default):** follows Roblox's log output, the same status messages PC macros read.
-No screen recording, no screenshots, no root. **Screen mode** (fallback) reads the screen with
-on-device OCR if your phone doesn't expose the logs. Nothing is ever clicked or typed in the game.
+It uses Android's screen cast to read the biome name and merchant chat messages on your phone
+(on-device text recognition, works offline). No screenshots are saved or sent anywhere, no root
+is needed, and nothing is ever clicked or typed in the game.
 
 ## 1. Get the APK
 
@@ -30,30 +30,17 @@ Install on the phone (allow "Install unknown apps" for your file manager / brows
    **Copy User ID** (or long-press a role in Server Settings → Roles → **Copy Role ID**).
 3. Private server link: in Sol's RNG on Roblox, Servers → your private server → **Share** → copy link.
 
-## 3. Shizuku setup (one time, no PC needed)
-
-1. Install **Shizuku** from the Play Store (or github.com/RikkaApps/Shizuku/releases).
-2. Turn on **Developer options**: Settings → About phone → tap **Build number** 7 times.
-3. Open Shizuku → **Start via Wireless debugging** → follow its pairing steps
-   (connect to Wi-Fi first).
-4. In PhoneScope tap **Check Shizuku & logs** → allow PhoneScope in the Shizuku popup → check again.
-   - "✅ Log mode should work" → you're set.
-   - "⚠️ No biome info found" → open Sol's RNG for a minute and check again. If it still finds nothing,
-     your Roblox version doesn't expose the logs: turn off **Use Shizuku** to use screen mode.
-
-Shizuku has to be started again after the phone restarts (open Shizuku → Start).
-
-## 4. App setup
+## 3. App setup
 
 1. Paste the webhook URL(s), private server link and IDs. Tap **Test biome** / **Test merchant** –
    a green "connected" message should appear in Discord.
 2. Choose which biomes to message about and which ones ping you
    (default ping: GLITCHED, DREAMSPACE, CYBERSPACE).
-3. Tap **Start**. Roblox opens automatically.
-   (In screen mode, allow screen recording: **Entire screen**, or "A single app" → Roblox.)
+3. Tap **Start** and allow screen recording (**Entire screen**, or "A single app" → Roblox).
+   Roblox opens automatically.
 4. Disable battery optimisation for PhoneScope (Settings → Apps → PhoneScope → Battery → Unrestricted).
 
-## Screen mode: tuning the screen areas
+## Tuning the screen areas
 
 Areas are `left,top,right,bottom` in percent of the screen (landscape while playing).
 

@@ -292,5 +292,4 @@ fun Context.startMonitor(resultCode: Int, data: Intent) {
 
 fun Context.stopMonitor() {
     stopService(Intent(this, MonitorService::class.java))
-    stopService(Intent(this, LogMonitorService::class.java))
 }

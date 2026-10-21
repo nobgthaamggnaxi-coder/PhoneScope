@@ -54,10 +54,6 @@ class Prefs(context: Context) {
         get() = sp.getBoolean("ping_merchants", true)
         set(v) = sp.edit().putBoolean("ping_merchants", v).apply()
 
-    /** true = read Roblox logs through Shizuku (no screen recording); false = screen reading fallback. */
-    var useShizuku: Boolean
-        get() = sp.getBoolean("use_shizuku", true)
-        set(v) = sp.edit().putBoolean("use_shizuku", v).apply()
 
     /** Screen area (percent: left,top,right,bottom) where the biome name is shown. */
     var biomeRegion: String
